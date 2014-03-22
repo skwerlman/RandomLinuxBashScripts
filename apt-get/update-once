@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#update the repository cache
+sudo apt-get -yfmu update
+
+#upgrade all the 'mundane' programs
+sudo apt-get -yfmu upgrade all
+
+#upgrade the distro and system files
+sudo apt-get -yfmu dist-upgrade
+
+#delete all unnecessary packages left over
+sudo apt-get -yfmu autoclean
+
+#exit clean
+exit 0

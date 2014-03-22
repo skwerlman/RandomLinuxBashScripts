@@ -1,0 +1,106 @@
+#!/bin/bash
+#Note to devs:
+#See comment on line 26 if your scheme isn't loading properly. Also see examples on lines 39 and 44.
+#If you're adding a new interpreter clause, it goes in the if-then starting at line 68.
+#Remember, you have to install xboxdrv for this to work! Also, you need superuser to use this!
+EC=1
+SCHEME=$1
+if  ! [ $SCHEME ] ; then 
+  SCHEME='~~default?SCHEME'
+fi
+shift 1
+ARGS=( "$@" )
+ARGSTR="{{ { $SCHEME }"
+for (( i = 0 ; i < ${#ARGS[@]} ; i++ )) do
+  ARGSTR="$ARGSTR { ${ARGS[$i]} }"
+done
+ARGSTR="$ARGSTR }}"
+echo Got $ARGSTR #This should only be enabled until release.
+echo Disabling xpad...
+sudo rmmod xpad #This stops Ubuntu's default Xbox360 driver in order to free the controller for this process.
+echo Stopping other instances of xboxdrv '(if any)'
+sudo killall -q xboxdrv #This will kill all other instances of xboxdrv in order to free the controller for this process.
+kill -9 $(pidof -x -o %PPID xbc-start) >/dev/null 2>/dev/null #This will kill any other instances of this xbc-start. This solves an issue where xboxdrv would be impossible to kill. We also suppress all output because kill produces a usage message if pidof finds nothing.
+SIM="simple scheme"
+COM="complex scheme"
+TYPE='xd' #Override this in your detection clause if you want your scheme to be handled differently than the default. Remember to add the handler towards the bottom.
+if  [ $SCHEME = '~~default?SCHEME' ]; then
+  echo [WARNING] Unable to find any matching scheme.
+  echo [WARNING] Falling back to default.
+  if [ -f default.xboxdrv ]; then
+    MSG="Found $SIM 'default.xboxdrv'"
+    EXEC="--config default.xboxdrv ${ARGS[@]}"
+    EC=0
+  else
+    MSG="[WARNING] Unable to find the default scheme.\n[WARNING] Running as xpad clone instead."
+    EXEC="--mimic-xpad ${ARGS[@]}"
+    EC=0
+  fi
+elif [ -f $SCHEME ]; then #TODO 1
+  MSG="Found $COM $SCHEME. Running..."
+  EXEC="./$SCHEME ${ARGS[@]}"
+  TYPE='sh'
+  EC=0
+elif [ -f $SCHEME.sh ]; then
+  MSG="Found $COM $SCHEME.sh. Running..."
+  EXEC="./$SCHEME.sh ${ARGS[@]}"
+  TYPE='sh'
+  EC=0
+elif [ -f $SCHEME.xboxdrv ]; then
+  MSG="Found $SIM $SCHEME.xboxdrv. Running..."
+  EXEC="--config $SCHEME.xboxdrv ${ARGS[@]}"
+  EC=0
+elif [ -f $SCHEME.xdrv ]; then
+  MSG="Found $SIM $SCHEME.xdrv. Running..."
+  EXEC="--config $SCHEME.xdrv ${ARGS[@]}"
+  EC=0
+elif [ $SCHEME = '~' ]; then #Passed as \~
+  MSG="Received special argument '~'. Running as mouse with args."
+  EXEC="--mouse ${ARGS[@]}"
+  EC=0
+else
+  MSG="[WARNING] Unable to find specified scheme. Running as xpad clone.\n[WARNING] Errors on exit will go into more detail."
+  EXEC="--mimic-xpad ${ARGS[@]}"
+  EC=2
+fi
+SM="Press Ctl-C to exit"
+echo -e $MSG
+if [ $TYPE = 'sh' ]; then
+  echo -e $SM
+  $EXEC
+elif [ $TYPE = 'xd' ]; then
+  echo -e $SM
+  sudo xboxdrv -s --quiet $EXEC
+else
+  echo -e "[WARNING] Couldn't identify type '$TYPE'.\nAttempting to run as type 'xd'. Expect errors."
+  echo -e $SM
+  sudo xboxdrv -s --quiet $EXEC
+fi
+echo $'\nTerminated.\nRestarting the xpad module...' #The only reason this is displayed is because sudo will likely have timed out at this point, so we'll need to give a reason to request sudo again.
+sudo modprobe xpad
+if [ ! $EC -eq 0 ]; then
+  if [ $EC -eq 1 ]; then
+    echo -e "[ERROR] Either something is seriously wrong, or you may not be\nusing a valid shell. Please try again using bash."
+  elif [ $EC -eq 2 ]; then
+    echo "[ERROR] Failed to find the specified scheme."
+    echo "[ERROR] In order to be seen by this program, a file must have one of the"
+    echo "[ERROR] following extensions:"
+    echo "[ERROR]     .xboxdrv"
+    echo "[ERROR]     .xdrv"
+    echo "[ERROR]     .sh"
+    echo "[ERROR]     no file extension"
+    echo "[ERROR] If it doesn't, it will not be seen, and will cause this error."
+  else
+    echo "[ERROR] Unknown error code. Something is corrupted." #This can't actually happen unless someone is dicking around in the terminal's private set, and happens to overwrite $EC.
+  fi
+  echo "[WARNING] Exiting with error code $EC because of an error."
+else
+  echo Bye!
+fi
+exit $EC
+
+#TODO LIST AS OF SAT JAN 11 2014 20:18 GMT (15:18 LOCAL TIME GMT-5)
+#TODO #: Problem
+
+#TODO 1: Check whether a scheme having the same name as a folder (sans extension) causes problems.
+

@@ -1,0 +1,59 @@
+# Supports the default controls in the way I thought was logical. 
+# 
+# A is jump
+# B is sneak
+# X is drop
+# Y is chat
+# Scroll with the DPAD
+# RT is left click
+# LT is right click
+# Left joystick is WASD
+# Right joystick is Mouse
+
+[xboxdrv]
+ui-clear=true
+trigger-as-button = true
+silent = true
+
+[ui-axismap]
+x1=KEY_A:KEY_D
+y1=KEY_W:KEY_S
+x2^dead:4500 = REL_X:750:-1
+y2^dead:4500 = REL_Y:750:-1
+
+
+#trigger^invert = rel-repeat:REL_WHEEL:1:50
+
+
+
+
+
+[ui-buttonmap]
+a = KEY_SPACE
+b = KEY_LEFTSHIFT
+x = KEY_Q
+y = KEY_T
+lt = BTN_RIGHT
+rt = BTN_LEFT
+
+# rb = KEY_PAGEDOWN
+# lb = KEY_PAGEUP
+
+# tl = KEY_BACKSPACE
+# tr = KEY_SPACE
+
+[ui-buttonmap]
+# dl = KEY_LEFT
+# dr = KEY_RIGHT
+du = rel:REL_WHEEL:-1:500
+dd = rel:REL_WHEEL:1:500
+
+# lt = KEY_VOLUMEDOWN
+# rt = KEY_VOLUMEUP
+
+[ui-buttonmap]
+start = KEY_E
+back  = KEY_ESC
+# guide = KEY_ESC
+
+# EOF #

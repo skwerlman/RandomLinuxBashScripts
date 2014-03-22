@@ -1,0 +1,25 @@
+#!/bin/bash
+sudo echo 'Updating the repository cache...'        #we call sudo here to cache the user's password before any output; it's not actually necessary
+sudo apt-get -yfmuq update >/dev/null               #update the repository cache
+echo 'Checking for upgraded packages...'
+RET=$(sudo apt-get -qs --assume-no upgrade all)     #Store the output of a simulated upgrade
+MSG=$(echo -e "Reading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.")
+if [ "$RET" = "$MSG" ]; then                        #$MSG has to be a variable because $RET contains newlines, which we can't get without echoing
+  MORE=''
+else
+  while [ ! "$RET" = "$MSG" ]; do
+    echo 'Upgrading user packages...'
+    sudo apt-get -yfmuq upgrade all >/dev/null      #upgrade all the 'mundane' programs
+    echo 'Upgrading distro and system files...'
+    sudo apt-get -yfmuq dist-upgrade >/dev/null     #upgrade the distro and system files
+    echo 'Cleaning up...'
+    sudo apt-get -yfmuq autoclean >/dev/null        #delete all unnecessary packages left over
+    echo 'Updating the repository cache...'
+    sudo apt-get -yfmuq update >/dev/null           #update the repository cache
+    echo 'Checking for more upgraded packages...'
+    RET=$(sudo apt-get -qs --assume-no upgrade all) #update the simulated upgrade
+  done
+  MORE=' more'
+fi
+echo "No$MORE upgrades are available at this time."
+

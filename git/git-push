@@ -1,0 +1,11 @@
+#!/bin/bash
+COMMIT=$@
+DEVDIR="/home/david/Desktop/dev/MLua/LuaGRUB/LuaGRUB/"
+if ! [ "$COMMIT" ] ; then
+  echo "You didn't include a commit description!"
+  exit
+fi
+cd $DEVDIR
+git add . -A
+git commit -m "$COMMIT"
+git push origin master

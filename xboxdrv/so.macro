@@ -1,0 +1,8 @@
+send KEY_LEFTSHIFT 1
+wait 25
+send KEY_TAB 1
+wait 100
+send KEY_TAB 0
+wait 25
+send KEY_LEFTSHIFT 0
+wait 25
