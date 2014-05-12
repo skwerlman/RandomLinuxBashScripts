@@ -1,16 +1,16 @@
 #!/bin/bash
 
 #update the repository cache
-sudo apt-get -yfmu update
+sudo apt-get -ymuq update
 
 #upgrade all the 'mundane' programs
-sudo apt-get -yfmu upgrade all
+sudo apt-get -ymuq upgrade all
 
 #upgrade the distro and system files
-sudo apt-get -yfmu dist-upgrade
+sudo apt-get -ymuq dist-upgrade
 
 #delete all unnecessary packages left over
-sudo apt-get -yfmu autoclean
+sudo apt-get -ymuq autoclean
 
 #exit clean
 exit 0
