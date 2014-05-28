@@ -14,6 +14,8 @@ else
     echo 'Upgrading distro and system files...'
     echo 'Please be patient; this can take a while.'
     sudo apt-get -ymuq dist-upgrade >/dev/null #upgrade the distro and system files
+    echo 'Removing unneeded packages...'
+    sudo apt-get -ymuq autoremove >/dev/null #uninstall all unnecessary/orphaned packages
     echo 'Cleaning up...'
     sudo apt-get -ymuq autoclean >/dev/null #delete all unnecessary packages left over
     echo 'Updating the repository cache...'
