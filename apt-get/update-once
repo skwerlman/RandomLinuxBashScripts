@@ -9,6 +9,9 @@ sudo apt-get -ymuq upgrade all
 #upgrade the distro and system files
 sudo apt-get -ymuq dist-upgrade
 
+#uninstall all unnecessary/orphaned packages
+sudo apt-get -ymuq autoremove
+
 #delete all unnecessary packages left over
 sudo apt-get -ymuq autoclean
 
