@@ -1,7 +1,7 @@
 RandomLinuxBashScripts
 ======================
 
-A collection of random scripts I use a bunch on my xubuntu rig
+######A collection of random scripts I use a bunch on my xubuntu rig
 
 Feel free to use them for whatever, but they're kinda focused on rather specific things.
 Many of them will need editing before they'll work on your system.
