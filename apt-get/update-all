@@ -1,5 +1,8 @@
 #!/bin/bash
-sudo echo 'Updating the repository cache...' #we call sudo here to cache the user's password before any output; it's not actually necessary
+
+sudo echo true >/dev/null || (echo "Root is needed to perform an update!" && exit 2)
+
+echo 'Updating the repository cache...'
 sudo apt-get -ymuq update >/dev/null #update the repository cache
 echo 'Checking for upgraded packages...'
 RET=$(sudo apt-get -qs --assume-no upgrade) #Store the output of a simulated upgrade
@@ -10,18 +13,24 @@ else
   while [ ! "$RET" = "$MSG" ]; do
     echo 'Upgrading user packages...'
     echo 'Please be patient; this can take a while.'
-    sudo apt-get -ymuq upgrade >/dev/null #upgrade all the 'mundane' programs
+    #upgrade all the 'mundane' programs
+    sudo apt-get -ymuq upgrade >/dev/null || (echo "Something went wrong during this stage! If you see this message multiple times, hold down Ctrl-C until this script stops." && sleep 5)
     echo 'Upgrading distro and system files...'
     echo 'Please be patient; this can take a while.'
-    sudo apt-get -ymuq dist-upgrade >/dev/null #upgrade the distro and system files
+    #upgrade the distro and system files
+    sudo apt-get -ymuq dist-upgrade >/dev/null || (echo "Something went wrong during this stage! If you see this message multiple times, hold down Ctrl-C until this script stops." && sleep 5)
     echo 'Removing unneeded packages...'
-    sudo apt-get -ymuq autoremove >/dev/null #uninstall all unnecessary/orphaned packages
+    #uninstall all unnecessary/orphaned packages
+    sudo apt-get -ymuq autoremove >/dev/null || (echo "Something went wrong during this stage! If you see this message multiple times, hold down Ctrl-C until this script stops." && sleep 5)
     echo 'Cleaning up...'
-    sudo apt-get -ymuq autoclean >/dev/null #delete all unnecessary packages left over
+    #delete all unnecessary packages left over
+    sudo apt-get -ymuq autoclean >/dev/null || (echo "Something went wrong during this stage! If you see this message multiple times, hold down Ctrl-C until this script stops." && sleep 5)
     echo 'Updating the repository cache...'
-    sudo apt-get -ymuq update >/dev/null #update the repository cache
+    #update the repository cache
+    sudo apt-get -ymuq update >/dev/null || (echo "Something went wrong during this stage! If you see this message multiple times, hold down Ctrl-C until this script stops." && sleep 5)
     echo 'Checking for more upgraded packages...'
-    RET=$(sudo apt-get -qs --assume-no upgrade) #update the simulated upgrade
+    #update the simulated upgrade
+    RET=$(sudo apt-get -qs --assume-no upgrade) 
   done
   MORE=' more'
 fi
