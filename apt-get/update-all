@@ -2,13 +2,13 @@
 
 #sudo do nothing or fail
 sudo true || (echo "Root is needed to perform an upgrade! Abort!" & kill $$)
-echo 'Updating the repository cache...'
 
 #update the repository cache
+echo 'Updating the repository cache...'
 sudo apt-get -ymuq update >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
-echo 'Checking for upgraded packages...'
 
 #Store the output of a simulated upgrade
+echo 'Checking for upgraded packages...'
 RET=$(sudo apt-get -qs --assume-no upgrade || (kill $$))
 MSG=$(echo -e "Reading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.")
 
@@ -20,7 +20,7 @@ else
     #upgrade all the 'mundane' programs
     echo 'Upgrading user packages...'
     echo 'Please be patient; this can take a while.'
-    sudo apt-get -ymuq upg rade >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+    sudo apt-get -ymuq upgrade >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
     
     #upgrade the distro and system files
     echo 'Upgrading distro and system files...'
