@@ -1,49 +1,90 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
+UPGR=false
+DIST=false
+RMVD=false
+
+#TODO ensure we're set as tetrarchbot
+
+APT="sudo apt-get"
+#APT="echo"
+ALL_UPGRADED=""
+ALL_REMOVED=""
 
 #sudo do nothing or fail
-sudo true || (echo "Root is needed to perform an upgrade! Abort!" & kill $$)
+sudo true || (echo "fatal: Root is needed to perform an upgrade!" & kill $$)
+
+echo 'Updating the repository cache...'
 
 #update the repository cache
-echo 'Updating the repository cache...'
-sudo apt-get -ymuq update >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+$APT -ymuq update &>/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+echo 'Checking for upgradable packages...'
 
 #Store the output of a simulated upgrade
-echo 'Checking for upgraded packages...'
-RET=$(sudo apt-get -qs --assume-no upgrade || (kill $$))
-MSG=$(echo -e "Reading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.")
+RET=`$APT -qs --assume-no upgrade`
+MSG=`echo -e "Reading package lists...\nBuilding dependency tree...\nReading state information...\n0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded."`
 
 if [ "$RET" = "$MSG" ]; then #$MSG has to be a variable because $RET contains newlines, which we can't get without echoing
-  MORE=''
+        MORE=''
 else
-  while [ ! "$RET" = "$MSG" ]; do
-    
-    #upgrade all the 'mundane' programs
-    echo 'Upgrading user packages...'
-    echo 'Please be patient; this can take a while.'
-    sudo apt-get -ymuq upgrade >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
-    
-    #upgrade the distro and system files
-    echo 'Upgrading distro and system files...'
-    echo 'Please be patient; this can take a while.'
-    sudo apt-get -ymuq dist-upgrade >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
-    
-    #uninstall all unnecessary/orphaned packages
-    echo 'Removing unneeded packages...'
-    sudo apt-get -ymuq autoremove >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
-    
-    #delete all unnecessary packages left over
-    echo 'Cleaning up...'
-    sudo apt-get -ymuq autoclean >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
-    
-    #update the repository cache
-    echo 'Updating the repository cache...'
-    sudo apt-get -ymuq update >/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
-    
-    #update the simulated upgrade
-    echo 'Checking for more upgraded packages...'
-    RET=$(sudo apt-get -qs --assume-no upgrade || (kill $$))
-  
-  done
-  MORE=' more'
+        while [ ! "$RET" = "$MSG" ]; do
+
+                PACKAGES=`echo -e "$RET" | ./find-upgradable.py | ./trim.py`
+                DIST_PACKAGES=`echo -e "$RET" | ./find-distupgradable.py | ./trim.py`
+                UNNEEDED_PACKAGES=`echo -e "$RET" | ./find-unneeded.py | ./trim.py`
+
+                if [ ! "$PACKAGES" = "" ]; then
+                        UPGR=true
+                        echo "Upgrading $PACKAGES"
+                        #upgrade all the 'mundane' programs
+                        $APT -ymuq upgrade || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+                fi
+
+                if [ ! "$DIST_PACKAGES" = "" ]; then
+                        DIST=true
+                        echo "Upgrading $DIST_PACKAGES"
+                        #upgrade the distro and system files
+                        $APT -ymuq dist-upgrade || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+                fi
+
+                if [ ! "$UNNEEDED_PACKAGES" = "" ]; then
+                        RMVD=true
+                        echo "Removing $UNNEEDED_PACKAGES"
+                        #uninstall all unnecessary/orphaned packages
+                        $APT -ymuq autoremove || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+                fi
+
+                echo 'Cleaning up...'
+                #delete all unnecessary packages left over
+                $APT -ymuq autoclean &>/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+
+                echo 'Updating the repository cache...'
+                #update the repository cache
+                $APT -ymuq update &>/dev/null || (echo "Something went wrong during this stage! Stopping!" & kill $$)
+
+                echo 'Checking for more upgradable packages...'
+                #update the simulated upgrade
+                RET=$($APT -qs --assume-no upgrade || (echo "Something went wrong during this stage! Stopping!" & kill $$))
+
+                ALL_UPGRADED="$ALL_UPGRADED $PACKAGES $DIST_PACKAGES"
+                ALL_REMOVED="$ALL_REMOVED $UNNEEDED_PACKAGES"
+
+        done
+        MORE=' more'
 fi
+
 echo "No$MORE upgrades are available at this time."
+
+if [[ $UPGR = true || $DIST = true || $RMVD = true ]]; then
+        PKG=`echo $ALL_UPGRADED | grep -o 'gitlab-ce'`
+        if  [ "$PKG" = "gitlab-ce" ]; then # check whether gitlab was updated
+                echo "GitLab was updated; restarting it..."
+                sudo gitlab-ctl restart >/dev/null
+        fi
+
+        PKG=`echo $ALL_UPGRADED | grep -o 'linux-image'`
+        if [ "$PKG" = "linux-image" ]; then # check whether the kernel was updated
+                echo "The kernel was updated; rebooting in 5 minutes!"
+                sudo shutdown -r +5
+        fi
+fi
