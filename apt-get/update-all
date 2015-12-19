@@ -4,10 +4,7 @@ UPGR=false
 DIST=false
 RMVD=false
 
-#TODO ensure we're set as tetrarchbot
-
 APT="sudo apt-get"
-#APT="echo"
 ALL_UPGRADED=""
 ALL_REMOVED=""
 
