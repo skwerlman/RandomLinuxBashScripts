@@ -3,6 +3,8 @@ RandomLinuxBashScripts
 
 ######A collection of random scripts I use a bunch on my xubuntu rig
 
+NOTE: I no longer use Xubuntu as my main OS; I have since switched to Sabayon-KDE. I still use `update-all` on a couple servers, but the other scripts are unmaintained.
+
 Feel free to use them for whatever, but they're kinda focused on rather specific things.
 Many of them will need editing before they'll work on your system.
 
